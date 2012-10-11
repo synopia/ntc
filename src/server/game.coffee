@@ -68,6 +68,7 @@ class ServerGame
 
     socket.on 'disconnect', (data)=>
       @clients[local_id].connected = false
+      @emit 'oncldisc', {id:local_id}
 
     socket.on 'ping', (data)->
       socket.emit 'ping', data
@@ -76,6 +77,7 @@ class ServerGame
       fake_lag = lag
 
     socket.emit 'invite', local_id:local_id
+    @emit 'onclconn', {id:local_id}
 
   find_free_slot: ->
     i = 1

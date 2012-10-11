@@ -7,6 +7,9 @@ LocalPlayer    = require('./local_player')
 RemotePlayer   = require('./remote_player')
 Streams        = require('../streams')
 
+log = (msg)->
+  $("#log").prepend(msg+'\n')
+
 class ClientGame
   constructor: (socket, ctx)->
     @ctx            = ctx
@@ -38,6 +41,14 @@ class ClientGame
     socket.on "onscoreupdate", (data)=>
       @unpack_scores(data)
 
+    socket.on "onclconn", (data)=>
+      log("Player #{data.id} connected")
+
+    socket.on "oncldisc", (data)=>
+      log("#{@clients[data.id].nickname} disconnected")
+      @clients[data.id].remove()
+      @clients[data.id] = null
+      @player_info[data.id] = "-"
 
 
     socket.on "onserverupdate", (data)=>
@@ -65,6 +76,7 @@ class ClientGame
         @clients[@local_id].remove
 
       @clients[@local_id] = @local_player
+      log "Use arrow keys to move, A and D to turn turret and space to shoot"
 
     @net_world.on_update = =>
 
@@ -161,7 +173,6 @@ class ClientGame
       if previous[id] && target[id]
         lerp = PlayerState.lerp( previous[id], target[id], time_point )
         lerp.apply_to @clients[id]
-
 
   unpack: (server_data)->
     input = Streams.input(server_data)

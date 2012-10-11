@@ -51,7 +51,7 @@ class World
     entity
 
   despawn: (entity)->
-    @entities.remove entity
+    @entities = (e for e in @entities when e!=entity)
 
   check_collisions: ->
     check_ground_collision = (entity) =>

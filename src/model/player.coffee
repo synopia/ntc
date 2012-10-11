@@ -112,9 +112,9 @@ class Player extends NetClient
       world.spawn b, false
 
   remove: ->
-    world.despawn @tank
+    @world.despawn @tank
     for b in @bullets
-      world.despawn b, false
+      @world.despawn b, false
 
   set_id: (local_id)->
     @local_id = local_id
