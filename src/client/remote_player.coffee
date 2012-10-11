@@ -1,4 +1,4 @@
-Player = require('../model/player')
+[Player, PlayerState] = require('../model/player')
 
 class RemotePlayer extends Player
   constructor: (world, id)->

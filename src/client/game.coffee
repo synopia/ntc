@@ -41,7 +41,6 @@ class ClientGame
       @latest_server_update = data
 
       data.c = @unpack(data.c)
-      #      console.log data.c[0]
 
       if @local_prediction || @server_prediction
         @server_updates.push data
@@ -67,7 +66,7 @@ class ClientGame
         @process_net_updates()
       else if @latest_server_update
         for id,client of @latest_server_update.c when id!=@local_id && @clients[id]
-          @clients[id].apply client
+          @clients[id].write_state client
 
       for id, client of @clients when id!=@local_id
         client.draw(@ctx)
@@ -189,6 +188,7 @@ class ClientGame
         @local_player.inputs.splice(0, number_to_clear)
 
         my_server_state.apply_to @local_player
+        @local_player.last_input_seq = lastinputseq_index
         @local_player.process_inputs()
         @world.check_collisions()
 

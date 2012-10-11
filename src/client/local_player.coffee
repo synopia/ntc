@@ -31,7 +31,6 @@ class LocalPlayer extends Player
       input.push('s')
 
     if input.length>0
-
       #Update what sequence we are on now
       @input_seq += 1
 

@@ -46,7 +46,6 @@ class PlayerState
       @bullets[i].y = b.pos.y
 
   apply_to: (player) ->
-    player.last_input_seq = @inp_seq
     player.tank.pos.x = @pos.x
     player.tank.pos.y = @pos.y
     player.tank.pos.d = @pos.d
