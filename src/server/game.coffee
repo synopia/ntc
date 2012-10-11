@@ -5,8 +5,7 @@ NetWorld       = require('../net.world')
 Streams        = require('../streams')
 
 class ServerGame
-  constructor: (room)->
-    @room      = room
+  constructor: ()->
     @world     = new World()
     @net_world = new NetWorld()
     @world.start()
@@ -17,9 +16,9 @@ class ServerGame
     @net_world.on_update = =>
       @server_time = @net_world.local_time
       @last_state  = @pack()
-      @room.emit 'onserverupdate', @last_state
+      @emit 'onserverupdate', @last_state
       if @server_time-@last_score_update>1
-        @room.emit 'onscoreupdate', @pack_scores()
+        @emit 'onscoreupdate', @pack_scores()
         @last_score_update = @server_time
 
     @world.on_update_physics = =>
@@ -28,6 +27,8 @@ class ServerGame
         client.process_inputs()
         client.inputs = []
 
+  emit: (channel, data)->
+    console.log "should be overwritten!"
   pack: ->
     world_state = Streams.output()
     client.read_state(world_state).pack(world_state) for id, client of @clients when client.connected

@@ -4,7 +4,7 @@ express   = require('express')
 UUID      = require('node-uuid')
 http      = require('http')
 ServerGame = require('./src/server/game')
-
+fs        = require('fs')
 
 GAME_PORT = process.env.PORT || 7007
 
@@ -18,7 +18,11 @@ app.get '/', (req, res) ->
   res.sendfile 'index.html'
 
 app.get '/*', (req, res) ->
-  res.sendfile req.params[0]
+  fs.lstat req.params[0], (err,stats)->
+    if not err
+      res.sendfile req.params[0]
+    else
+      res.sendfile 'index.html'
 
 sio = io.listen(server)
 
@@ -40,10 +44,14 @@ sio.on 'connection', (client)->
     game = games[data.game_id]
     if not game
       console.log " create new game"
-      games[data.game_id] = game = new ServerGame sio.sockets.in data.game_id
+      games[data.game_id] = game = new ServerGame
+      game.emit = (channel, d)->
+        sio.sockets.in("/"+data.game_id).emit(channel, d)
 
+    client.join "/"+data.game_id
     game.join client
 
   client.on 'disconnect', ->
     console.log "Client disconnected #{client.user_id} from #{game}"
+
 

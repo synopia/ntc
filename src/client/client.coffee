@@ -1,14 +1,20 @@
 
 ClientGame = require('./game')
 
-#io        = require('socket.io-client')
+url_pattern = ///
+  ^(http://.*:[0-9]+/)(.*)$
+///
 
-sio = io.connect "http://37.200.98.160:7007"
+[url, room] = window.location.href.match(url_pattern)[1..2]
+
+room ||= "default"
+
+sio = io.connect url
 
 sio.on 'onconnect', (data)->
   userid = data.user_id
 
-  sio.emit 'join', game_id:"funky"
+  sio.emit 'join', game_id:room
 
 sio.on 'onserverupdate', (data)->
 #  console.log data
