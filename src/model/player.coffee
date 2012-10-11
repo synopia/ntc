@@ -94,6 +94,7 @@ class Player extends NetClient
     super
     @local_id   = local_id
     @tank       = new Tank()
+    @nickname   = "-"
     @frags      = 0
     @deaths     = 0
 
@@ -188,6 +189,16 @@ class Player extends NetClient
     bullet.set_pos @tank.pos.x, @tank.pos.y, @tank.pos.d+@turret_dir
     bullet.move 0, @tank.size.y*1.5, 0
     @last_shot = 1
+
+  pack_scores: (output)->
+    output.write @nickname
+    output.write @deaths
+    output.write @frags
+
+  unpack_scores: (input)->
+    @nickname = input.read()
+    @deaths   = input.read()
+    @frags    = input.read()
 
   read_state: ->
     new PlayerState(@)

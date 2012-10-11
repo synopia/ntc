@@ -75,3 +75,4 @@ describe "PlayerState", ->
       expect(b.pos.x).toEqual(i*100) if b.alive
       expect(b.pos.y).toEqual(i)     if b.alive
 
+

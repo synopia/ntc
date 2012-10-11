@@ -11,13 +11,16 @@ class ServerGame
     @net_world = new NetWorld()
     @world.start()
     @net_world.start()
-
+    @last_score_update = 0
     @clients   = {}
 
     @net_world.on_update = =>
       @server_time = @net_world.local_time
       @last_state  = @pack()
       @room.emit 'onserverupdate', @last_state
+      if @server_time-@last_score_update>1
+        @room.emit 'onscoreupdate', @pack_scores()
+        @last_score_update = @server_time
 
     @world.on_update_physics = =>
       for id, client of @clients when client.connected
@@ -32,6 +35,13 @@ class ServerGame
       c: world_state.stream
       t: @server_time
     }
+
+  pack_scores: ->
+    world_state = Streams.output()
+    for id, client of @clients when client.connected
+      world_state.write id
+      client.pack_scores(world_state)
+    world_state.stream
 
   join: (socket) ->
     local_id = @find_free_slot()

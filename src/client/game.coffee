@@ -19,6 +19,7 @@ class ClientGame
     @buffer_size    = 2
     @local_id       = -1
     @clients        = []
+    @clients[@local_id] = @local_player
     @net_offset     = 100
     @server_time    = 0.016
     @client_time    = 0.016
@@ -34,6 +35,11 @@ class ClientGame
     @latest_server_update = null
 
     @create_debug_gui()
+
+    socket.on "onscoreupdate", (data)=>
+      @unpack_scores(data)
+
+
 
     socket.on "onserverupdate", (data)=>
       @server_time = data.t
@@ -86,6 +92,7 @@ class ClientGame
     gui = new dat.GUI()
     player = gui.addFolder("Player")
     player.add(@, 'local_id').listen()
+    player.add(@local_player, 'nickname').listen()
     player.add(@local_player.tank.pos, 'x').listen()
     player.add(@local_player.tank.pos, 'y').listen()
     player.add(@local_player.tank.pos, 'd').listen()
@@ -163,12 +170,19 @@ class ClientGame
       id = player.id
       res[id] = player
 
-      @clients[id] ||= new RemotePlayer @world, id if id!=@local_id
-      @player_info[id] = "+#{player.f} -#{player.d}"
+      @clients[id] ||= new RemotePlayer @world, id
 
       if id>max then max = id
     res.max = max
     res
+
+  unpack_scores:(server_data)->
+    input = Streams.input(server_data)
+    while input.has_more()
+      id = input.read()
+      @clients[id] ||= new RemotePlayer @world, id
+      @clients[id].unpack_scores(input)
+      @player_info[id] = "#{@clients[id].nickname} +#{@clients[id].frags} -#{@clients[id].deaths}"
 
   process_local_prediction_correction:->
     return if not @server_updates.length
