@@ -57,30 +57,30 @@ class PlayerState
       bullet.pos.y = b.y
 
   pack: (output) ->
-    output.write @id
-    output.write @inp_seq
-    output.write @pos.x
-    output.write @pos.y
-    output.write @pos.d
-    output.write @turret_dir
-    output.write (b for b in @bullets when b.alive).length
+    output.write_byte @id
+    output.write_short @inp_seq
+    output.write_float @pos.x
+    output.write_float @pos.y
+    output.write_float @pos.d
+    output.write_float @turret_dir
+    output.write_byte (b for b in @bullets when b.alive).length
     for bullet, i in @bullets when bullet.alive
-      output.write i
-      output.write bullet.x
-      output.write bullet.y
+      output.write_byte i
+      output.write_float bullet.x
+      output.write_float bullet.y
 
   unpack: (input)->
-    @id  = input.read()
-    @inp_seq = input.read()
-    @pos = { x:input.read(), y:input.read(), d:input.read() }
-    @turret_dir = input.read();
-    bullet_count = input.read()
+    @id  = input.read_byte()
+    @inp_seq = input.read_short()
+    @pos = { x:input.read_float(), y:input.read_float(), d:input.read_float() }
+    @turret_dir = input.read_float();
+    bullet_count = input.read_byte()
     if bullet_count>0
       for i in [1..bullet_count]
-        id = input.read()
+        id = input.read_byte()
         @bullets[id].alive = true
-        @bullets[id].x = input.read()
-        @bullets[id].y = input.read()
+        @bullets[id].x = input.read_float()
+        @bullets[id].y = input.read_float()
 
   @lerp: (state0, state1, time_point)->
     ps = new PlayerState()
@@ -200,16 +200,16 @@ class Player extends NetClient
     @last_shot = 1
 
   pack_scores: (output)->
-    output.write @nickname
-    output.write @deaths
-    output.write @frags
-    output.write @color
+    output.write_utf8 @nickname
+    output.write_short @deaths
+    output.write_short @frags
+    output.write_utf8 @color
 
   unpack_scores: (input)->
-    @nickname = input.read()
-    @deaths   = input.read()
-    @frags    = input.read()
-    @color    = input.read()
+    @nickname = input.read_utf8()
+    @deaths   = input.read_short()
+    @frags    = input.read_short()
+    @color    = input.read_utf8()
 
   read_state: ->
     new PlayerState(@)

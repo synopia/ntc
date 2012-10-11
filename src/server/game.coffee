@@ -40,7 +40,7 @@ class ServerGame
   pack_scores: ->
     world_state = Streams.output()
     for id, client of @clients when client.connected
-      world_state.write id
+      world_state.write_byte id
       client.pack_scores(world_state)
     world_state.stream
 

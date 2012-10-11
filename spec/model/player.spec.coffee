@@ -76,3 +76,11 @@ describe "PlayerState", ->
       expect(b.pos.y).toEqual(i)     if b.alive
 
 
+  it "should", ->
+    os = Streams.output()
+    @state.pos.x=Math.PI
+    @state.pos.y=Math.PI
+    @state.pos.d=Math.PI
+    @state.pack os
+
+    console.log os.stream.length

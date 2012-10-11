@@ -179,8 +179,9 @@ class ClientGame
 
   unpack_scores:(server_data)->
     input = Streams.input(server_data)
+
     while input.has_more()
-      id = input.read()
+      id = input.read_byte()
       @clients[id] ||= new RemotePlayer @world, id
       @clients[id].unpack_scores(input)
       @player_info[id] = "#{@clients[id].nickname} +#{@clients[id].frags} -#{@clients[id].deaths}"
