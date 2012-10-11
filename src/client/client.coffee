@@ -3,7 +3,7 @@ ClientGame = require('./game')
 
 #io        = require('socket.io-client')
 
-sio = io.connect "http://37.200.98.160::7007"
+sio = io.connect "http://37.200.98.160:7007"
 
 sio.on 'onconnect', (data)->
   userid = data.user_id
