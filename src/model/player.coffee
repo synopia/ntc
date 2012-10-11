@@ -102,6 +102,13 @@ class Player extends NetClient
       if other instanceof Bullet
         @deaths += 1
         other.owner.frags += 1
+        p = world.find_free_pos()
+        @tank.alive = false
+        setTimeout =>
+          @tank.pos.x = p.x
+          @tank.pos.y = p.y
+          @tank.alive = true
+        , 500
 
     @turret_dir = 0
     @bullets    = (new Bullet(@) for i in [0..10])
@@ -122,23 +129,25 @@ class Player extends NetClient
 
 
   draw: (ctx)->
-    ctx.translate(@tank.pos.x, @tank.pos.y)
-    ctx.rotate(@tank.pos.d/ 180.0*Math.PI)
-    ctx.fillStyle = @color
-    ctx.strokeStyle = "#000000"
-    ctx.beginPath()
-    ctx.arc(0,0,@tank.radius, 0, Math.PI*2, true)
-    ctx.closePath()
-    ctx.stroke();
-    ctx.fillRect(-@tank.size.hx, -@tank.size.hy, @tank.size.x, @tank.size.y)
+    if @tank.alive
+      ctx.translate(@tank.pos.x, @tank.pos.y)
+      ctx.rotate(@tank.pos.d/ 180.0*Math.PI)
+      ctx.fillStyle = @color
+      ctx.strokeStyle = "#000000"
+      ctx.beginPath()
+      ctx.arc(0,0,@tank.radius, 0, Math.PI*2, true)
+      ctx.closePath()
+      ctx.stroke();
+      ctx.fillRect(-@tank.size.hx, -@tank.size.hy, @tank.size.x, @tank.size.y)
 
-    ctx.rotate(@turret_dir/180.0*Math.PI)
-    ctx.fillStyle = "rgba(0,0,0,1.0)"
-    ctx.fillRect(-@tank.size.hx/ 2, 0, @tank.size.hx, @tank.size.y )
-    ctx.rotate(-@turret_dir/180.0*Math.PI)
+      ctx.rotate(@turret_dir/180.0*Math.PI)
+      ctx.fillStyle = "rgba(0,0,0,1.0)"
+      ctx.fillRect(-@tank.size.hx/ 2, 0, @tank.size.hx, @tank.size.y )
+      ctx.rotate(-@turret_dir/180.0*Math.PI)
 
-    ctx.rotate(-@tank.pos.d/ 180.0*Math.PI)
-    ctx.translate(-@tank.pos.x, -@tank.pos.y)
+      ctx.rotate(-@tank.pos.d/ 180.0*Math.PI)
+      ctx.translate(-@tank.pos.x, -@tank.pos.y)
+
     for bullet in @bullets when bullet.alive
       ctx.translate(bullet.pos.x, bullet.pos.y)
       ctx.fillStyle = "rgba(0,0,0,1.0)"
