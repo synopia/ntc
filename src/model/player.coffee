@@ -194,11 +194,13 @@ class Player extends NetClient
     output.write @nickname
     output.write @deaths
     output.write @frags
+    output.write @color
 
   unpack_scores: (input)->
     @nickname = input.read()
     @deaths   = input.read()
     @frags    = input.read()
+    @color    = input.read()
 
   read_state: ->
     new PlayerState(@)

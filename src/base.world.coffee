@@ -19,6 +19,14 @@ class World
         if @map.is_wall x, y
           ctx.fillRect x*block_size_x, y*block_size_y, block_size_x, block_size_y
 
+  find_free_pos: ->
+    x = 0
+    y = 0
+    while @map.is_wall(x, y)
+      x = Math.random()*@map.size.x
+      y = Math.random()*@map.size.y
+    { x:x*@bounds.x / @map.size.x, y:y*@bounds.y / @map.size.y }
+
   start: ->
     console.log("starting physic loop")
     @physic_loop = setInterval =>

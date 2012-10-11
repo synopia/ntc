@@ -46,9 +46,16 @@ class ServerGame
   join: (socket) ->
     local_id = @find_free_slot()
     client   = new Player socket, @world, local_id
+    tile = @world.find_free_pos()
+    client.tank.pos.x = tile.x
+    client.tank.pos.y = tile.y
     @clients[local_id] = client
     @clients[local_id].connected = true
     fake_lag = 0
+    socket.on 'nickname', (data)->
+      client.nickname = data
+    socket.on 'color', (data)->
+      client.color = data
 
     socket.on 'onclientupdate', (data)->
       if fake_lag>0

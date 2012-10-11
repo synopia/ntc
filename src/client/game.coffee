@@ -19,7 +19,6 @@ class ClientGame
     @buffer_size    = 2
     @local_id       = -1
     @clients        = []
-    @clients[@local_id] = @local_player
     @net_offset     = 100
     @server_time    = 0.016
     @client_time    = 0.016
@@ -62,6 +61,7 @@ class ClientGame
     socket.on "invite", (data) =>
       @local_id = data.local_id
       @local_player.set_id @local_id
+      @clients[@local_id] = @local_player
 
     @net_world.on_update = =>
 
@@ -74,11 +74,8 @@ class ClientGame
         for id,client of @latest_server_update.c when id!=@local_id && @clients[id]
           @clients[id].write_state client
 
-      for id, client of @clients when id!=@local_id
+      for id, client of @clients
         client.draw(@ctx)
-
-      @local_player.draw(@ctx)
-
 
     @world.on_update_physics = =>
       @local_player.process_physic_tick();
@@ -91,17 +88,22 @@ class ClientGame
   create_debug_gui: ->
     gui = new dat.GUI()
     player = gui.addFolder("Player")
-    player.add(@, 'local_id').listen()
-    player.add(@local_player, 'nickname').listen()
-    player.add(@local_player.tank.pos, 'x').listen()
-    player.add(@local_player.tank.pos, 'y').listen()
-    player.add(@local_player.tank.pos, 'd').listen()
-    player.add(@local_player, 'color').listen()
+    nickname = player.add(@local_player, 'nickname').listen()
+
+    nickname.onChange (value)=>
+      @local_player.socket.emit 'nickname', value
+
+    color = player.addColor(@local_player, 'color').listen()
+    color.onChange (value)=>
+      @local_player.socket.emit 'color', value
+
     player.open()
 
     game = gui.addFolder("Game")
     for i in [1..10]
       game.add(@player_info, "#{i}").listen()
+
+    game.open()
 
     network = gui.addFolder('Network')
     lag_control = network.add(@, 'fake_lag').step(0.001).min(0).max(2000).listen()
@@ -114,7 +116,7 @@ class ClientGame
     network.add(@, 'net_latency').listen()
     network.add(@, 'local_prediction').listen()
     network.add(@, 'remote_prediction').listen()
-    network.open()
+
 
   process_net_updates: ->
     return if not @server_updates.length
@@ -152,8 +154,7 @@ class ClientGame
 
   lerp: (latest, previous, target, time_point) ->
     max = Math.max( latest.max, Math.max(previous.max, target.max) )
-    for id in [0..max]
-      continue if id==@local_id
+    for id in [0..max] when id!=@local_id
       if previous[id] && target[id]
         lerp = PlayerState.lerp( previous[id], target[id], time_point )
         lerp.apply_to @clients[id]
