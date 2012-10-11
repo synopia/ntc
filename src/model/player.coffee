@@ -19,17 +19,6 @@ v2_lerp = (a,b,t)->
     a: true
   }
 
-COLOR_TABLE = [
-  'rgba(255,0,0,0.8)',
-  'rgba(0,0,255,0.8)',
-  'rgba(0,255,0,0.8)',
-  'rgba(255,0,255,0.8)',
-  'rgba(255,255,255,0.8)',
-  'rgba(255,255,0,0.8)',
-  'rgba(255,255,0,0.8)',
-  'rgba(255,0,255,0.8)',
-  'rgba(255,255,0,0.8)'
-]
 class PlayerState
   constructor: (player=null) ->
     @bullets = ({alive:false,x:0,y:0} for i in [0..10])
@@ -113,7 +102,7 @@ class Player extends NetClient
     @turret_dir = 0
     @bullets    = (new Bullet(@) for i in [0..10])
     @world      = world
-    @color      = COLOR_TABLE[0]
+    @color      = '#444444'
     @last_shot  = 1
 
     world.spawn @tank
@@ -122,22 +111,19 @@ class Player extends NetClient
     for b in @bullets
       world.spawn b, false
 
+  remove: ->
+    world.despawn @tank
+    for b in @bullets
+      world.despawn b, false
 
   set_id: (local_id)->
     @local_id = local_id
-    @color    = COLOR_TABLE[local_id]
-
 
   draw: (ctx)->
     if @tank.alive
       ctx.translate(@tank.pos.x, @tank.pos.y)
       ctx.rotate(@tank.pos.d/ 180.0*Math.PI)
       ctx.fillStyle = @color
-      ctx.strokeStyle = "#000000"
-      ctx.beginPath()
-      ctx.arc(0,0,@tank.radius, 0, Math.PI*2, true)
-      ctx.closePath()
-      ctx.stroke();
       ctx.fillRect(-@tank.size.hx, -@tank.size.hy, @tank.size.x, @tank.size.y)
 
       ctx.rotate(@turret_dir/180.0*Math.PI)

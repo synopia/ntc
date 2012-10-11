@@ -68,7 +68,7 @@ class InputStream
 
   read_utf8: ->
     len = @read_short()
-    res = @stream[@pos..@pos+len]
+    res = @stream[@pos..@pos+len-1]
     @pos += len
     res
 

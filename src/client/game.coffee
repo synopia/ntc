@@ -61,6 +61,9 @@ class ClientGame
     socket.on "invite", (data) =>
       @local_id = data.local_id
       @local_player.set_id @local_id
+      if @clients[@local_id]
+        @clients[@local_id].remove
+
       @clients[@local_id] = @local_player
 
     @net_world.on_update = =>
@@ -179,7 +182,6 @@ class ClientGame
 
   unpack_scores:(server_data)->
     input = Streams.input(server_data)
-
     while input.has_more()
       id = input.read_byte()
       @clients[id] ||= new RemotePlayer @world, id

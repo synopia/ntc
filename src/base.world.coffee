@@ -50,6 +50,9 @@ class World
     entity.alive = set_alive
     entity
 
+  despawn: (entity)->
+    @entities.remove entity
+
   check_collisions: ->
     check_ground_collision = (entity) =>
       while entity.pos.x<0
