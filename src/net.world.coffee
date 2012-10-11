@@ -17,7 +17,7 @@ do ->
         callback( curr_time+time_to_call)
       , time_to_call
       last_time    = curr_time + time_to_call
-
+      id
 
   unless window.cancelAnimationFrame
     window.cancelAnimationFrame = (id)->
@@ -34,8 +34,13 @@ class NetWorld
       @_dte = new Date().getTime()
       @local_time += @_dt/1000.0
     , 4
+
+  start: ->
     console.log("starting network loop")
     @update 0
+
+  stop: ->
+    window.cancelAnimationFrame @updateid
 
   on_update: ->
 

@@ -12,7 +12,8 @@
         "node-uuid" : "latest",
         "http" : "latest",
         "socket.io-client" : "latest",
-        "browserify" : "latest"
+        "browserify" : "latest",
+        "jasmine-node": "latest"
     }
 
 }

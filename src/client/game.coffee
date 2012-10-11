@@ -2,6 +2,8 @@ World          = require('../base.world')
 Entity         = require('../base.entity')
 NetWorld       = require('../net.world')
 LocalPlayer    = require('./local_player')
+[Player, PlayerState] = require('../model/player')
+
 RemotePlayer   = require('./remote_player')
 Streams        = require('../streams')
 
@@ -10,6 +12,8 @@ class ClientGame
     @ctx            = ctx
     @world          = new World()
     @net_world      = new NetWorld()
+    @world.start()
+    @net_world.start()
     @local_player   = new LocalPlayer socket, @world
     @server_updates = []
     @buffer_size    = 2
@@ -65,8 +69,6 @@ class ClientGame
         for id,client of @latest_server_update.c when id!=@local_id && @clients[id]
           @clients[id].apply client
 
-      #      console.log @local_player.tank
-#      (console.log(client.tank.pos) for id, client of @clients)
       for id, client of @clients when id!=@local_id
         client.draw(@ctx)
 
@@ -147,8 +149,8 @@ class ClientGame
     for id in [0..max]
       continue if id==@local_id
       if previous[id] && target[id]
-        lerp = LocalPlayer.lerp( previous[id], target[id], time_point )
-        @clients[id].apply lerp
+        lerp = PlayerState.lerp( previous[id], target[id], time_point )
+        lerp.apply_to @clients[id]
 
 
   unpack: (server_data)->
@@ -156,15 +158,15 @@ class ClientGame
     res = {}
     max = 0
     while input.has_more()
-      player = LocalPlayer.unpack input
+      player = new PlayerState()
+      player.unpack input
+
       id = player.id
-      @player_info[id] = "online"
       res[id] = player
-      if id!=@local_id
-        @clients[id] ||= new RemotePlayer @world, id
-        @player_info[id] = "+#{player.f} -#{player.d}"
-      else
-        @player_info[id] = "+#{player.f} -#{player.d}"
+
+      @clients[id] ||= new RemotePlayer @world, id if id!=@local_id
+      @player_info[id] = "+#{player.f} -#{player.d}"
+
       if id>max then max = id
     res.max = max
     res
@@ -174,7 +176,7 @@ class ClientGame
     latest_server_data = @server_updates[-1..][0]
     my_server_state    = latest_server_data.c[@local_id]
     return if not my_server_state
-    my_last_input_on_server = my_server_state.is
+    my_last_input_on_server = my_server_state.inp_seq
     if my_last_input_on_server
       lastinputseq_index = -1
       for input, i in @local_player.inputs
@@ -186,7 +188,7 @@ class ClientGame
         number_to_clear = Math.abs(lastinputseq_index-(-1))
         @local_player.inputs.splice(0, number_to_clear)
 
-        @local_player.apply my_server_state
+        my_server_state.apply_to @local_player
         @local_player.process_inputs()
         @world.check_collisions()
 

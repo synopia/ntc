@@ -30,7 +30,67 @@ COLOR_TABLE = [
   'rgba(255,0,255,0.8)',
   'rgba(255,255,0,0.8)'
 ]
+class PlayerState
+  constructor: (player=null) ->
+    @bullets = ({alive:false,x:0,y:0} for i in [0..10])
+    @load_from(player) if player
+
+  load_from: (player) ->
+    @id  = player.local_id
+    @inp_seq  = player.last_input_seq
+    @pos = {x:player.tank.pos.x, y:player.tank.pos.y, d:player.tank.pos.d }
+    @turret_dir = player.turret_dir
+    for b,i in player.bullets
+      @bullets[i].alive = b.alive
+      @bullets[i].x = b.pos.x
+      @bullets[i].y = b.pos.y
+
+  apply_to: (player) ->
+    player.last_input_seq = @inp_seq
+    player.tank.pos.x = @pos.x
+    player.tank.pos.y = @pos.y
+    player.tank.pos.d = @pos.d
+    player.turret_dir = @turret_dir
+    for b,i in @bullets
+      bullet = player.bullets[i]
+      bullet.alive = b.alive
+      bullet.pos.x = b.x
+      bullet.pos.y = b.y
+
+  pack: (output) ->
+    output.write @id
+    output.write @inp_seq
+    output.write @pos.x
+    output.write @pos.y
+    output.write @pos.d
+    output.write @turret_dir
+    output.write (b for b in @bullets when b.alive).length
+    for bullet, i in @bullets when bullet.alive
+      output.write i
+      output.write bullet.x
+      output.write bullet.y
+
+  unpack: (input)->
+    @id  = input.read()
+    @inp_seq = input.read()
+    @pos = { x:input.read(), y:input.read(), d:input.read() }
+    @turret_dir = input.read();
+    bullet_count = input.read()
+    if bullet_count>0
+      for i in [1..bullet_count]
+        id = input.read()
+        @bullets[id].alive = true
+        @bullets[id].x = input.read()
+        @bullets[id].y = input.read()
+
+  @lerp: (state0, state1, time_point)->
+    ps = new PlayerState()
+    ps.pos = v3_lerp(state0.pos, state1.pos, time_point)
+    ps.turret_dir = lerp(state0.t, state1.t, time_point)
+    ps.bullets = (v2_lerp(state0.bullets[i], state1.bullets[i], time_point) for i in [0..10] when state0.bullets[i].alive && state1.bullets[i].alive)
+
 class Player extends NetClient
+
   constructor: (socket, world, local_id) ->
     super
     @local_id   = local_id
@@ -130,65 +190,10 @@ class Player extends NetClient
     bullet.move 0, @tank.size.y*1.5, 0
     @last_shot = 1
 
+  read_state: ->
+    new PlayerState(@)
 
-  pack: (output)->
-    super
-    output.write @local_id
-    output.write @tank.pos.x
-    output.write @tank.pos.y
-    output.write @tank.pos.d
-    output.write @turret_dir
-    output.write @frags
-    output.write @deaths
-    for bullet in @bullets
-      output.write bullet.alive
-      if bullet.alive
-        output.write bullet.pos.x
-        output.write bullet.pos.y
+  write_state: (state)->
+    state.apply_to @
 
-
-  @unpack: (input)->
-    res    = super
-    res.id =  input.read()
-    res.p  = {x:input.read(),y: input.read(), d:input.read()}
-    res.t  = input.read()
-    res.b  = []
-    res.f  = input.read()
-    res.d  = input.read()
-    for i in [0..10]
-      a = input.read()
-      if a==true
-        x = input.read()
-        y = input.read()
-        res.b.push {a:true,x:x, y:y}
-      else
-        res.b.push {a:false}
-
-    res
-
-  apply: (data)->
-    super
-    @tank.pos.x = data.p.x
-    @tank.pos.y = data.p.y
-    @tank.pos.d = data.p.d
-    @turret_dir = data.t
-    @frags      = data.f
-    @deaths     = data.d
-    for b,i in data.b
-      @bullets[i].alive = b.a
-      if b.a
-        @bullets[i].set_pos b.x, b.y, @tank.pos.d
-
-  @lerp: (data0, data1, time_point)->
-    res = {
-      id: data0.id,
-      p: v3_lerp(data0.p, data1.p, time_point),
-      b: (v2_lerp(data0.b[i], data1.b[i], time_point) for i in [0..10] when data0.b[i].alive && data1.b[i].alive),
-      t: lerp(data0.t, data1.t, time_point),
-      f: data1.f,
-      d: data1.d
-    }
-    res
-
-
-module.exports = Player
+module.exports = [Player, PlayerState]

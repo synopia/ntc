@@ -1,31 +1,41 @@
 Map = require('./map')
 
 class World
-  constructor: ->
-    @map      = new Map()
-    @bounds   = { max_x: 720, max_y: 480 }
+  constructor: (map=new Map())->
+    @map      = map
+    @bounds   = { x: 720, y: 480 }
     @pdt      = 0.0001
     @pdte     = new Date().getTime()
     @entities = []
 
-    console.log("starting physic loop")
-    setInterval =>
-      @pdt  = (new Date().getTime() - @pdte)/ 1000.0
-      @pdte = new Date().getTime()
-      (entity.store() for entity in @entities)
-      @on_update_physics?()
-      @check_collisions()
-    , 15
 
   draw: (ctx)->
-    ctx.clearRect 0, 0, @bounds.max_x, @bounds.max_y
-    block_size_x = @bounds.max_x / @map.size.x
-    block_size_y = @bounds.max_y / @map.size.y
+    ctx.clearRect 0, 0, @bounds.x, @bounds.y
+    block_size_x = @bounds.x / @map.size.x
+    block_size_y = @bounds.y / @map.size.y
     ctx.fillStyle = "#555555"
     for x in [0..@map.size.x-1]
       for y in [0..@map.size.y-1]
         if @map.is_wall x, y
           ctx.fillRect x*block_size_x, y*block_size_y, block_size_x, block_size_y
+
+  start: ->
+    console.log("starting physic loop")
+    @physic_loop = setInterval =>
+      @inner_loop()
+    , 15
+
+  stop: ->
+    console.log("stopping physic loop")
+    clearInterval @physic_loop
+
+  inner_loop: ->
+    @pdt  = (new Date().getTime() - @pdte)/ 1000.0
+    @pdte = new Date().getTime()
+
+    (entity.store() for entity in @entities)
+    @on_update_physics?()
+    @check_collisions()
 
   spawn: (entity, set_alive=true) ->
     @entities.push entity
@@ -35,16 +45,16 @@ class World
   check_collisions: ->
     check_ground_collision = (entity) =>
       while entity.pos.x<0
-        entity.pos.x += @bounds.max_x
+        entity.pos.x += @bounds.x
       while entity.pos.y<0
-        entity.pos.y += @bounds.max_y
-      while entity.pos.x>=@bounds.max_x
-        entity.pos.x -= @bounds.max_x;
-      while entity.pos.y>=@bounds.max_y
-        entity.pos.y -= @bounds.max_y;
+        entity.pos.y += @bounds.y
+      while entity.pos.x>=@bounds.x
+        entity.pos.x -= @bounds.x;
+      while entity.pos.y>=@bounds.y
+        entity.pos.y -= @bounds.y;
 
-      x = entity.pos.x * @map.size.x / @bounds.max_x
-      y = entity.pos.y * @map.size.y / @bounds.max_y
+      x = entity.pos.x * @map.size.x / @bounds.x
+      y = entity.pos.y * @map.size.y / @bounds.y
 
       @map.is_wall( x, y )
 
@@ -71,6 +81,9 @@ class World
             if collision
               @entities[i].collide_with( @entities[j] )
               @entities[j].collide_with( @entities[i] )
+
+              @entities[i].restore()
+              @entities[j].restore()
           j += 1
 
       i+=1

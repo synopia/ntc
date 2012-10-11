@@ -1,7 +1,7 @@
 World          = require('../base.world')
 Entity         = require('../base.entity')
 NetWorld       = require('../net.world')
-Player         = require('../model/player')
+[Player, PlayerState] = require('../model/player')
 Streams        = require('../streams')
 
 class ServerGame
@@ -9,6 +9,9 @@ class ServerGame
     @room      = room
     @world     = new World()
     @net_world = new NetWorld()
+    @world.start()
+    @net_world.start()
+
     @clients   = {}
 
     @net_world.on_update = =>
@@ -24,7 +27,7 @@ class ServerGame
 
   pack: ->
     world_state = Streams.output()
-    client.pack(world_state) for id, client of @clients when client.connected
+    client.read_state(world_state).pack(world_state) for id, client of @clients when client.connected
     {
       c: world_state.stream
       t: @server_time

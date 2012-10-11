@@ -23,13 +23,4 @@ class NetClient
     console.log(data)
     @socket.emit channel, data
 
-  pack: (output)->
-    output.write @last_input_seq
-
-  apply: (data) ->
-    @last_input_seq = data.is
-
-  @unpack: (input)->
-    { is: input.read() }
-
 module.exports = NetClient
