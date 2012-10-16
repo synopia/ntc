@@ -2,7 +2,7 @@
 ClientGame = require('./game')
 
 url_pattern = ///
-  ^(http://.*:[0-9]+/)(.*)$
+  ^(http://.*/)(.*)$
 ///
 
 [url, room] = window.location.href.match(url_pattern)[1..2]
