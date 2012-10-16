@@ -1,6 +1,7 @@
 Tank      = require('./tank')
 Bullet    = require('./bullet')
 NetClient = require('../net.client')
+log       = require('../log')
 
 lerp = (p, n, t)->
   _t = Math.max(0, Math.min(1, t))
@@ -89,6 +90,7 @@ class Player extends NetClient
 
     @tank.collide_with = (other)=>
       if other instanceof Bullet
+        log ("#{other.owner.nickname} killed #{@nickname}")
         @deaths += 1
         other.owner.frags += 1
         p = world.find_free_pos()
