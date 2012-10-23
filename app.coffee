@@ -49,6 +49,7 @@ sio.on 'connection', (client)->
         sio.sockets.in("/"+data.game_id).emit(channel, d)
 
     client.join "/"+data.game_id
+    client.leave ""
     game.join client
 
   client.on 'disconnect', ->

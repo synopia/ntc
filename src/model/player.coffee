@@ -84,7 +84,7 @@ class Player extends NetClient
     super
     @local_id   = local_id
     @tank       = new Tank()
-    @nickname   = "-"
+    @nickname   = "Player #{local_id}"
     @frags      = 0
     @deaths     = 0
 

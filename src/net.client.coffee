@@ -8,9 +8,8 @@ class NetClient
   process_input: (input) ->
 
   process_inputs: ->
-    @inputs.filter (input) =>
-      if input.seq > @last_input_seq
-        @process_input(input.inputs)
+    for input in @inputs when input.seq > @last_input_seq
+      @process_input(input.inputs)
 
     if @inputs.length
       last_input = @inputs[@inputs.length-1]

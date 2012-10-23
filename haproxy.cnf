@@ -1,0 +1,38 @@
+global
+    log 127.0.0.1   local0
+    log 127.0.0.1   local0 notice
+
+    maxconn 4096
+    nbproc 1
+    pidfile /var/run/haproxy.pid
+
+    user haproxy
+    group haproxy
+
+defaults
+    mode http
+
+frontend all *:80
+    timeout client 86400000
+#    default_backend www_backend
+
+    acl is_websocket hdr(Upgrade) -i WebSocket
+    acl is_websocket hdr_beg(Host) -i ws
+    acl is_faye url_sub faye
+
+    use_backend faye_backend if is_faye
+    use_backend ws_backend if is_websocket
+
+backend ws_backend
+    option forwardfor
+    timeout queue 5000
+    timeout connect 86400000
+    timeout server 86400000
+    server server1 127.0.0.1:7007 maxconn 2000 check
+
+backend faye_backend
+    option forwardfor
+    timeout connect 4000
+    timeout server 45000
+    server server1 127.0.0.1:7007 maxconn 1024 check
+

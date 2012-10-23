@@ -54,11 +54,11 @@ class ClientGame
     socket.on "onserverupdate", (data)=>
       @server_time = data.t
       @client_time = @server_time - (@net_offset/1000)
-      @latest_server_update = data
 
       data.c = @unpack(data.c)
 
-      if @local_prediction || @server_prediction
+      @latest_server_update = data
+      if @local_prediction || @remote_prediction
         @server_updates.push data
         if @server_updates.length>=600*@buffer_size
           @server_updates = @server_updates.splice(0,1)
@@ -66,7 +66,7 @@ class ClientGame
       if @local_prediction
         @process_local_prediction_correction()
       else
-        @local_player.apply data.c[@local_id] if data.c[@local_id]
+        data.c[@local_id].apply_to @local_player if data.c[@local_id]
 
 
     socket.on "invite", (data) =>
@@ -83,11 +83,13 @@ class ClientGame
       @world.draw @ctx
 
       @local_player.handle_input(@net_world.local_time)
-      if @server_prediction
+      if @remote_prediction
         @process_net_updates()
       else if @latest_server_update
-        for id,client of @latest_server_update.c when id!=@local_id && @clients[id]
-          @clients[id].write_state client
+        for id,client of @latest_server_update.c
+          id = parseInt( id, 10 )
+          if id!=@local_id && @clients[id]
+            @clients[id].write_state client
 
       for id, client of @clients
         client.draw(@ctx)
@@ -217,7 +219,7 @@ class ClientGame
         @local_player.inputs.splice(0, number_to_clear)
 
         my_server_state.apply_to @local_player
-        @local_player.last_input_seq = lastinputseq_index
+        @local_player.last_input_seq = my_server_state.inp_seq #lastinputseq_index
         @local_player.process_inputs()
         @world.check_collisions()
 
