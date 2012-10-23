@@ -12,7 +12,7 @@ global
 defaults
     mode http
 
-frontend all *:80
+frontend all 0.0.0.0:80
     timeout client 86400000
 #    default_backend www_backend
 
